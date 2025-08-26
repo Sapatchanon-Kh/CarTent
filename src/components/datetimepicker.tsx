@@ -1,18 +1,33 @@
 // src/components/datetimepicker.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { Button, Row, Col } from 'antd';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
-import type { Dayjs } from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import { generateDateOptions } from '../data/data';
+import 'dayjs/locale/th'; // Ensure Thai locale is loaded
+import buddhistEra from 'dayjs/plugin/buddhistEra'; // Import plugin for Buddhist Era
+
+dayjs.locale('th'); // Set locale to Thai
+dayjs.extend(buddhistEra); // Extend dayjs with Buddhist Era plugin
 
 interface CustomDatePickerProps {
   selectedDate: Dayjs | null;
   setSelectedDate: (date: Dayjs) => void;
 }
 
-const dateOptions = generateDateOptions(7);
-
 const CustomDatePicker: React.FC<CustomDatePickerProps> = ({ selectedDate, setSelectedDate }) => {
+  const [weekStartDate, setWeekStartDate] = useState(dayjs());
+
+  const handlePrevWeek = () => {
+    setWeekStartDate(weekStartDate.subtract(7, 'day'));
+  };
+
+  const handleNextWeek = () => {
+    setWeekStartDate(weekStartDate.add(7, 'day'));
+  };
+
+  const dateOptions = generateDateOptions(7, weekStartDate);
+
   return (
     <div style={{ background: '#333333', padding: '10px 0', borderRadius: '10px 10px 0 0' }}>
       <Row gutter={[8, 8]} justify="center" align="middle" style={{ width: '100%' }}>
@@ -28,12 +43,13 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({ selectedDate, setSe
               border: '1px solid #666666'
             }}
             icon={<LeftOutlined />}
+            onClick={handlePrevWeek}
           />
         </Col>
         <Col xs={16} sm={20} style={{ display: 'flex', flexWrap: 'nowrap', overflowX: 'auto', justifyContent: 'center' }}>
           <Row gutter={[8, 8]} style={{ flexWrap: 'nowrap' }}>
             {dateOptions.map((option, index) => (
-              <Col key={index} flex="1" style={{ textAlign: 'center', minWidth: '80px' }}>
+              <Col key={index} flex="1" style={{ textAlign: 'center', minWidth: '100px' }}> {/* Adjusted minWidth */}
               <Button
                 style={{
                 width: '100%',
@@ -47,13 +63,15 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({ selectedDate, setSe
                 flexDirection: 'column',
                 justifyContent: 'center',
                 alignItems: 'center',
-                textAlign: 'center'
-  }}
-  onClick={() => setSelectedDate(option.date)}
->
-  <span>{option.label}</span>
-  <span style={{ fontSize: '12px' }}>{option.date.locale('th').format('DD MMMM')}</span>
-</Button>
+                textAlign: 'center',
+                padding: '4px'
+                }}
+                onClick={() => setSelectedDate(option.date)}
+              >
+                <span>{option.label}</span>
+                {/* Updated format to include Buddhist year */}
+                <span style={{ fontSize: '12px' }}>{option.date.format('DD MMMM BBBB')}</span>
+              </Button>
               </Col>
             ))}
           </Row>
@@ -70,6 +88,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({ selectedDate, setSe
               border: '1px solid #666666'
             }}
             icon={<RightOutlined />}
+            onClick={handleNextWeek}
           />
         </Col>
       </Row>

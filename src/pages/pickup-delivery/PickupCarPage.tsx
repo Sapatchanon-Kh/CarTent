@@ -1,240 +1,230 @@
-// src/pages/BookingConfirmationPage.tsx
-import React, { useState } from 'react';
-import { Layout, theme, Button, Card, Row, Col, Space, Drawer, Menu, Modal } from 'antd';
+import React, { useState, useEffect } from 'react';
+import {
+    Layout, theme, Button, Card, Row, Col, Space, Drawer, Menu, Modal,
+    Typography, Divider, Breadcrumb, Empty
+} from 'antd';
 import { useNavigate } from 'react-router-dom';
 import type { MenuInfo } from 'rc-menu/lib/interface';
-import { MenuOutlined, PlusCircleOutlined, EditOutlined, CalendarOutlined, ClockCircleOutlined, UserOutlined, EnvironmentOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import {
+    MenuOutlined, PlusCircleOutlined, EditOutlined, CalendarOutlined,
+    ClockCircleOutlined, UserOutlined, EnvironmentOutlined, CloseCircleOutlined
+} from '@ant-design/icons';
 import { drawerMenuItems } from '../../data/data';
 
 const { Header, Content, Footer } = Layout;
+const { Title, Text } = Typography;
 
-const BookingConfirmationPage: React.FC = () => {
-  const {
-    token: { colorBgContainer, borderRadiusLG },
-  } = theme.useToken();
-  const navigate = useNavigate();
+// Define an interface for the pickup booking object
+interface PickupBooking {
+    id: number;
+    contractNumber: string;
+    appointmentDate: string;
+    appointmentTime: string;
+    employee: string;
+    appointmentMethod: string;
+    address?: string;
+    province?: string;
+    district?: string;
+    subdistrict?: string;
+}
 
-  // Array ของข้อมูลประวัติการนัดหมาย (ตัวอย่าง)
-  const bookingHistory = [
+const initialBookingHistory: PickupBooking[] = [
     {
-      contractNumber: 'D42-20250821',
-      appointmentDate: '21 สิงหาคม 2568',
-      appointmentTime: '14:00 - 15:00 น.',
-      employee: 'Emp 1',
-      appointmentMethod: 'รับรถที่เต็นท์รถยนต์มือสอง',
+        id: 1,
+        contractNumber: 'D42-20250821',
+        appointmentDate: '21 สิงหาคม 2568',
+        appointmentTime: '14:00 - 15:00 น.',
+        employee: 'คุณสมชาย ใจดี',
+        appointmentMethod: 'รับรถที่เต็นท์รถยนต์มือสอง',
     },
     {
-      contractNumber: 'D42-20250818',
-      appointmentDate: '18 สิงหาคม 2568',
-      appointmentTime: '10:00 - 11:00 น.',
-      employee: 'Emp 2',
-      appointmentMethod: 'จัดส่งรถถึงที่',
+        id: 2,
+        contractNumber: 'D42-20250818',
+        appointmentDate: '18 สิงหาคม 2568',
+        appointmentTime: '10:00 - 11:00 น.',
+        employee: 'คุณสมหญิง เก่งมาก',
+        appointmentMethod: 'จัดส่งรถถึงที่',
     },
-    {
-      contractNumber: 'D42-20250815',
-      appointmentDate: '15 สิงหาคม 2568',
-      appointmentTime: '16:00 - 17:00 น.',
-      employee: 'Emp 3',
-      appointmentMethod: 'รับรถที่เต็นท์รถยนต์มือสอง',
-    },
-  ];
+];
 
-  const [open, setOpen] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+const PickupCarPage: React.FC = () => {
+    const {
+        token: { colorBgContainer, borderRadiusLG },
+    } = theme.useToken();
+    const navigate = useNavigate();
 
-  const showDrawer = () => {
-    setOpen(true);
-  };
+    const [bookingHistory, setBookingHistory] = useState<PickupBooking[]>([]);
+    const [open, setOpen] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [bookingToCancel, setBookingToCancel] = useState<PickupBooking | null>(null);
 
-  const onClose = () => {
-    setOpen(false);
-  };
+    // This function loads data from localStorage
+    const loadBookings = () => {
+        const storedBookings = localStorage.getItem('pickupBookings');
+        if (storedBookings) {
+            setBookingHistory(JSON.parse(storedBookings));
+        } else {
+            // If no data, set initial data
+            localStorage.setItem('pickupBookings', JSON.stringify(initialBookingHistory));
+            setBookingHistory(initialBookingHistory);
+        }
+    };
 
-  const handleMenuClick = (e: MenuInfo) => {
-    const selectedItem = drawerMenuItems.find(item => item.key === e.key);
-    if (selectedItem && selectedItem.path) {
-      navigate(selectedItem.path);
-      onClose();
-    }
-  };
+    useEffect(() => {
+        // Load bookings when the component mounts
+        loadBookings();
 
-  const handleCreateNewBooking = () => {
-    navigate('/pickup-car-create');
-  };
-  
-  const handleEditBooking = () => {
-    navigate('/pickup-car-create');
-  };
+        // Add an event listener to reload data when the window gets focus
+        // This ensures data is fresh when navigating back to this page
+        window.addEventListener('focus', loadBookings);
 
-  const handleCancelBooking = () => {
-    setIsModalOpen(true);
-  };
+        // Cleanup the event listener when the component unmounts
+        return () => {
+            window.removeEventListener('focus', loadBookings);
+        };
+    }, []); // Empty dependency array ensures this effect runs only once on mount
 
-  const handleConfirmCancel = () => {
-    // Logic สำหรับการยืนยันการยกเลิกการนัดหมาย
-    console.log('Booking has been cancelled');
-    setIsModalOpen(false);
-  };
+    const showDrawer = () => setOpen(true);
+    const onClose = () => setOpen(false);
 
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-  };
+    const handleMenuClick = (e: MenuInfo) => {
+        const selectedItem = drawerMenuItems.find(item => item.key === e.key);
+        if (selectedItem?.path) {
+            navigate(selectedItem.path);
+            onClose();
+        }
+    };
 
-  return (
-    <Layout>
-      <Header style={{ backgroundColor: '#4A4A4A', padding: '0 20px' }}>
-        <Row align="middle" justify="space-between" style={{ height: '100%' }}>
-          <Col>
-            <span style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>SA เต็นท์รถ</span>
-          </Col>
-          <Col flex="auto" style={{ padding: '0 20px' }} />
-          <Col>
-            <Button type="text" onClick={showDrawer} icon={<MenuOutlined style={{ fontSize: '24px', color: 'white' }} />} />
-          </Col>
-        </Row>
-      </Header>
-      
-      <Drawer 
-        title="เมนู" 
-        onClose={onClose} 
-        open={open} 
-        placement="right" 
-        style={{ background: '#262626' }}
-      >
-        <Menu 
-          mode="vertical" 
-          style={{ background: '#262626' }}
-          onClick={handleMenuClick}
-          items={drawerMenuItems} 
-        />
-      </Drawer>
-      
-      <Content style={{ padding: '0 48px' }}>
-        <div
-          style={{
-            background: colorBgContainer,
-            minHeight: 1080,
-            padding: 24,
-            borderRadius: borderRadiusLG,
-          }}
-        >
-          <Row align="middle" justify="space-between" style={{ marginBottom: '16px' }}>
-            <Col>
-              <h1 style={{ color: 'white', fontSize: '2em', fontWeight: 'normal' }}>ประวัติการนัดรับรถยนต์</h1>
-            </Col>
-            <Col>
-              <Button 
-                type="primary" 
-                icon={<PlusCircleOutlined />} 
-                style={{ backgroundColor: '#f1d430ff', color: 'black' }}
-                onClick={handleCreateNewBooking}
-              >
-                สร้างการนัดหมายใหม่
-              </Button>
-            </Col>
-          </Row>
-          <Row gutter={[0, 24]} justify="center">
-            <Col xs={24} sm={20} md={16} lg={12}>
-              {bookingHistory.map((booking, index) => (
-                <Card
-                  key={index}
-                  title={<span style={{ fontWeight: 'normal' }}>หมายเลขสัญญาซื้อขาย: <span style={{ fontWeight: 'bold' }}>{booking.contractNumber}</span></span>}
-                  bordered={true}
-                  style={{
-                    width: '100%',
-                    backgroundColor: '#363636',
-                    color: 'white',
-                    borderRadius: '10px',
-                    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.3)',
-                    marginBottom: '24px',
-                    borderColor: '#f1d846ff',
-                    borderWidth: '1px',
-                  }}
-                >
-                  <Row gutter={[16, 16]} style={{ marginTop: '20px' }}>
-                    <Col span={24}>
-                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-                        <CalendarOutlined style={{ fontSize: '24px', color: '#f1d430ff', marginRight: '10px' }} />
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ color: '#aaaaaa' }}>วันนัดหมาย</span>
-                          <span style={{ color: 'white', fontWeight: 'bold' }}>{booking.appointmentDate}</span>
+    const handleCreateNewBooking = () => navigate('/pickup-car-create');
+    const handleEditBooking = (booking: PickupBooking) => navigate(`/pickup-car-create?id=${booking.id}`);
+
+    const handleCancelBooking = (booking: PickupBooking) => {
+        setBookingToCancel(booking);
+        setIsModalOpen(true);
+    };
+
+    const handleConfirmCancel = () => {
+        if (bookingToCancel) {
+            const updatedBookings = bookingHistory.filter(b => b.id !== bookingToCancel.id);
+            setBookingHistory(updatedBookings);
+            localStorage.setItem('pickupBookings', JSON.stringify(updatedBookings));
+            setIsModalOpen(false);
+            setBookingToCancel(null);
+        }
+    };
+
+    const handleModalClose = () => {
+        setIsModalOpen(false);
+        setBookingToCancel(null);
+    };
+
+    return (
+        <Layout>
+            <Header style={{ backgroundColor: '#4A4A4A', padding: '0 24px' }}>
+                <Row align="middle" justify="space-between" style={{ height: '100%' }}>
+                    <Col><Title level={3} style={{ color: 'white', margin: 0 }}>SA เต็นท์รถ</Title></Col>
+                    <Col><Button type="text" onClick={showDrawer} icon={<MenuOutlined style={{ fontSize: '24px', color: 'white' }} />} /></Col>
+                </Row>
+            </Header>
+
+            <Drawer title={<Title level={4} style={{color: 'white'}}>เมนู</Title>} onClose={onClose} open={open} placement="right" style={{ background: '#262626' }}>
+                <Menu theme="dark" mode="vertical" style={{ background: '#262626', borderRight: 0 }} onClick={handleMenuClick} items={drawerMenuItems} />
+            </Drawer>
+
+            <Content style={{ padding: '0 48px', background: '#262626' }}>
+                <Breadcrumb style={{ margin: '16px 0' }} items={[{ title: <Text style={{ color: '#999' }}>Home</Text> }, { title: <Text style={{ color: 'white' }}>Pickup History</Text> }]} />
+                <div style={{ background: colorBgContainer, minHeight: 'calc(100vh - 180px)', padding: 24, borderRadius: borderRadiusLG }}>
+                    <Row align="middle" justify="space-between">
+                        <Col><Title level={2} style={{ color: 'white', marginBottom: 0 }}>ประวัติการนัดรับรถยนต์</Title></Col>
+                        <Col>
+                            <Button type="primary" icon={<PlusCircleOutlined />} style={{ background: 'linear-gradient(45deg, #FFD700, #FFA500)', color: 'black', border: 'none', fontWeight: 'bold' }} onClick={handleCreateNewBooking}>
+                                สร้างการนัดหมายใหม่
+                            </Button>
+                        </Col>
+                    </Row>
+                    <Divider style={{ borderColor: '#424242' }} />
+
+                    {bookingHistory.length > 0 ? (
+                        <Row gutter={[0, 24]} justify="center">
+                            <Col xs={24} sm={20} md={16} lg={12}>
+                                {bookingHistory.map((booking) => (
+                                    <Card
+                                        key={booking.id}
+                                        style={{
+                                            width: '100%',
+                                            backgroundColor: '#363636',
+                                            color: 'white',
+                                            borderRadius: '12px',
+                                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
+                                            marginBottom: '24px',
+                                            border: '1px solid #f1d846ff',
+                                        }}
+                                    >
+                                        <Title level={5} style={{ color: 'white', marginBottom: '24px' }}>
+                                            หมายเลขสัญญาซื้อขาย: <Text style={{ color: '#f1d430ff' }}>{booking.contractNumber}</Text>
+                                        </Title>
+
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '30px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                <CalendarOutlined style={{ fontSize: '24px', color: '#f1d430ff', marginRight: '16px' }} />
+                                                <div>
+                                                    <Text style={{ color: '#aaaaaa', display: 'block' }}>วันนัดหมาย</Text>
+                                                    <Text style={{ color: 'white', fontWeight: 'bold' }}>{booking.appointmentDate}</Text>
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                <ClockCircleOutlined style={{ fontSize: '24px', color: '#f1d430ff', marginRight: '16px' }} />
+                                                <div>
+                                                    <Text style={{ color: '#aaaaaa', display: 'block' }}>เวลานัดหมาย</Text>
+                                                    <Text style={{ color: 'white', fontWeight: 'bold' }}>{booking.appointmentTime}</Text>
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                <UserOutlined style={{ fontSize: '24px', color: '#f1d430ff', marginRight: '16px' }} />
+                                                <div>
+                                                    <Text style={{ color: '#aaaaaa', display: 'block' }}>พนักงานที่ดูแล</Text>
+                                                    <Text style={{ color: 'white', fontWeight: 'bold' }}>{booking.employee}</Text>
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                <EnvironmentOutlined style={{ fontSize: '24px', color: '#f1d430ff', marginRight: '16px' }} />
+                                                <div>
+                                                    <Text style={{ color: '#aaaaaa', display: 'block' }}>วิธีนัดหมาย</Text>
+                                                    <Text style={{ color: 'white', fontWeight: 'bold' }}>{booking.appointmentMethod}</Text>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <Space style={{ width: '100%', justifyContent: 'center' }}>
+                                            <Button icon={<EditOutlined />} style={{ backgroundColor: '#f1d430ff', color: 'black', border: 'none' }} onClick={() => handleEditBooking(booking)}>แก้ไข</Button>
+                                            <Button icon={<CloseCircleOutlined />} danger onClick={() => handleCancelBooking(booking)}>ยกเลิก</Button>
+                                        </Space>
+                                    </Card>
+                                ))}
+                            </Col>
+                        </Row>
+                    ) : (
+                        <div style={{ textAlign: 'center', marginTop: '100px' }}>
+                            <Empty description={<Text style={{ color: '#777' }}>ยังไม่มีประวัติการนัดหมาย</Text>}>
+                                <Button type="primary" style={{ background: 'linear-gradient(45deg, #FFD700, #FFA500)', color: 'black', border: 'none', fontWeight: 'bold' }} onClick={handleCreateNewBooking}>สร้างการนัดหมายแรกของคุณ</Button>
+                            </Empty>
                         </div>
-                      </div>
-                    </Col>
-                    <Col span={24}>
-                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-                        <ClockCircleOutlined style={{ fontSize: '24px', color: '#f1d430ff', marginRight: '10px' }} />
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ color: '#aaaaaa' }}>เวลานัดหมาย</span>
-                          <span style={{ color: 'white', fontWeight: 'bold' }}>{booking.appointmentTime}</span>
-                        </div>
-                      </div>
-                    </Col>
-                    <Col span={24}>
-                      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-                        <UserOutlined style={{ fontSize: '24px', color: '#f1d430ff', marginRight: '10px' }} />
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ color: '#aaaaaa' }}>พนักงานที่นัดหมาย</span>
-                          <span style={{ color: 'white', fontWeight: 'bold' }}>{booking.employee}</span>
-                        </div>
-                      </div>
-                    </Col>
-                    <Col span={24}>
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <EnvironmentOutlined style={{ fontSize: '24px', color: '#f1d430ff', marginRight: '10px' }} />
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ color: '#aaaaaa' }}>วิธีนัดหมาย</span>
-                          <span style={{ color: 'white', fontWeight: 'bold' }}>{booking.appointmentMethod}</span>
-                        </div>
-                      </div>
-                    </Col>
-                  </Row>
-                  
-                  <Space style={{ marginTop: '30px', width: '100%', justifyContent: 'center' }}>
-                    <Button
-                      type="primary"
-                      icon={<EditOutlined />}
-                      style={{ backgroundColor: '#f1d430ff', color: 'black' }}
-                      onClick={handleEditBooking}
-                    >
-                      แก้ไข
-                    </Button>
-                    <Button
-                      type="primary"
-                      icon={<CloseCircleOutlined />}
-                      danger
-                      onClick={handleCancelBooking}
-                    >
-                      ยกเลิก
-                    </Button>
-                  </Space>
-                </Card>
-              ))}
-            </Col>
-          </Row>
-        </div>
-      </Content>
-      <Footer style={{ textAlign: 'center' }}>
-        Ant Design ©{new Date().getFullYear()} Created by sapatchanon khotrwiang
-      </Footer>
-      
-      <Modal
-        title="ยืนยันการยกเลิก"
-        open={isModalOpen}
-        onCancel={handleModalClose}
-        footer={[
-          <Button key="back" onClick={handleModalClose}type="primary"  style={{ color: 'black' }}>
-            ยกเลิก
-          </Button>,
-          <Button key="submit" type="primary" danger onClick={handleConfirmCancel}>
-            ยืนยัน
-          </Button>,
-        ]}
-      >
-        <p>คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการนัดหมายนี้?</p>
-      </Modal>
-    </Layout>
-  );
+                    )}
+                </div>
+            </Content>
+
+            <Footer style={{ textAlign: 'center', background: '#4A4A4A', color: 'white' }}>
+                Ant Design ©{new Date().getFullYear()} Created by sapatchanon khotrwiang
+            </Footer>
+
+            <Modal title="ยืนยันการยกเลิก" open={isModalOpen} onCancel={handleModalClose} footer={[
+                <Button key="back" type="primary" onClick={handleModalClose}>กลับ</Button>,
+                <Button key="submit" type="primary" danger onClick={handleConfirmCancel}>ยืนยันการยกเลิก</Button>
+            ]}>
+                <p>คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการนัดหมายนี้?</p>
+            </Modal>
+        </Layout>
+    );
 };
 
-export default BookingConfirmationPage;
+export default PickupCarPage;
