@@ -27,25 +27,17 @@ export interface Province {
 export const provinces: Province[] = addressData;
 
 export const drawerMenuItems = [
-  { key: '1', label: 'เข้าสู่ระบบ/สมัครสมาชิก', path: '/login'},
+
   { key: '2', label: 'เลือกซื้อรถยนต์', path: '/buy-car'},
   { key: '3', label: 'เลือกเช่ารถยนต์', path: '/rent-car' },
   { key: '4', label: 'เลือกซื้อประกันรถยนต์', path: '/buy-insurance'},
   { key: '5', label: 'นัดหมายรับรถยนต์', path: '/pickup-car'},
   { key: '6', label: 'นัดหมายตรวจสภาพรถยนต์', path: '/inspection-car'},
   { key: '7', label: 'การชำระเงิน', path: '/payment'},
+  
 ];
 
-export const drawerMenuAfterLockinCustomerItems = [
-  { key: '1', label: 'ข้อมูลของฉัน', path: '/login'},
-  { key: '2', label: 'เลือกซื้อรถยนต์', path: '/buy-car'},
-  { key: '3', label: 'เลือกเช่ารถยนต์', path: '/rent-car' },
-  { key: '4', label: 'เลือกซื้อประกันรถยนต์', path: '/buy-insurance'},
-  { key: '5', label: 'นัดหมายรับรถยนต์', path: '/pickup-car'},
-  { key: '6', label: 'นัดหมายตรวจสภาพรถยนต์', path: '/inspection-car'},
-  { key: '7', label: 'การชำระเงิน', path: '/payment'},
-  { key: '8', label: 'ออกจากระบบ', path: '/buy-car'},
-];
+
 
 export const typeItems = [
   { value: 'รับรถที่เต็นท์รถยนต์มือสอง', label: 'รับรถที่เต็นท์รถยนต์มือสอง' },

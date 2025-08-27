@@ -1,23 +1,22 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  Layout, theme, Select, Button, Space, Row, Col, Input, Drawer, Menu,
+  Select, Button, Space, Row, Col, Input,
   Typography, Divider, message
 } from 'antd';
-import type { MenuInfo } from 'rc-menu/lib/interface';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import 'dayjs/locale/th';
-import { MenuOutlined } from '@ant-design/icons';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import '../../style/global.css';
 import '../../style/inspecstyle.css';
 import CustomDatePicker from '../../components/datetimepicker';
-import { timeOptions, drawerMenuItems, provinces, typeItems, empItems } from '../../data/data';
+// แก้ไข: import provinces จาก thailand-address.json โดยตรง
+import provinces from '../../data/thailand-address.json'; 
+import { timeOptions, typeItems, empItems } from '../../data/data';
 
 dayjs.locale('th');
 
-const { Header, Content, Footer } = Layout;
 const { Title, Text } = Typography;
 
 // Define an interface for the pickup booking object
@@ -35,16 +34,11 @@ interface PickupBooking {
 }
 
 const PickupCarCreatePage: React.FC = () => {
-  const {
-    token: { colorBgContainer, borderRadiusLG },
-  } = theme.useToken();
+
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editingId = searchParams.get('id');
-
-  // State for Drawer
-  const [open, setOpen] = useState(false);
 
   // Form State
   const [contractNumber, setContractNumber] = useState('');
@@ -62,7 +56,7 @@ const PickupCarCreatePage: React.FC = () => {
   // State for disabling save button
   const [isSaveDisabled, setIsSaveDisabled] = useState(true);
 
-  // Dynamic options for address dropdowns
+  // Dynamic options for address dropdowns using the correct property names
   const districtOptions = useMemo(() => {
     if (!selectedProvince) return [];
     const province = provinces.find(p => p.name_th === selectedProvince);
@@ -107,6 +101,7 @@ const PickupCarCreatePage: React.FC = () => {
         setSelectedTime(bookingToEdit.appointmentTime.split(' ')[0]);
         setAddress(bookingToEdit.address || '');
         setSelectedProvince(bookingToEdit.province);
+        // Using setTimeout to allow dependent dropdowns to populate before setting the value
         setTimeout(() => {
           setSelectedDistrict(bookingToEdit.district);
           setTimeout(() => {
@@ -153,138 +148,108 @@ const PickupCarCreatePage: React.FC = () => {
     navigate('/pickup-car');
   };
 
-  const showDrawer = () => setOpen(true);
-  const onClose = () => setOpen(false);
-
-  const handleMenuClick = (e: MenuInfo) => {
-    const selectedItem = drawerMenuItems.find(item => item.key === e.key);
-    if (selectedItem?.path) {
-      navigate(selectedItem.path);
-      onClose();
-    }
-  };
-
   return (
-    <Layout>
-      <Header style={{ backgroundColor: '#4A4A4A', padding: '0 24px' }}>
-        <Row align="middle" justify="space-between" style={{ height: '100%' }}>
-          <Col><span style={{ fontSize: '24px', fontWeight: 'bold', color: 'white' }}>SA เต็นท์รถ</span></Col>
-          <Col><Button type="text" onClick={showDrawer} icon={<MenuOutlined style={{ fontSize: '24px', color: 'white' }} />} /></Col>
+    <div style={{ padding: '24px 48px' }}>
+      <div style={{ minHeight: 'calc(100vh - 180px)', padding: 24 }}>
+        <Row justify="center">
+          <Col xs={24} sm={22} md={20} lg={18} xl={16}>
+            <Title level={2} style={{ color: 'white' }}>{editingId ? 'แก้ไข' : 'สร้าง'}การนัดหมายรับรถยนต์</Title>
+            <Divider style={{ borderColor: '#424242' }} />
+
+            <Title level={4} style={{ color: '#f1d430ff' }}>ข้อมูลการนัดหมาย</Title>
+            <Row align="middle" gutter={[16, 20]} style={{ marginBottom: '40px' }}>
+              <Col xs={24} sm={8} style={{ textAlign: 'left' }}><Text style={{ color: 'white' }}>เลือกประเภทการรับรถยนต์</Text></Col>
+              <Col xs={24} sm={16}><Select placeholder="เลือกประเภท" value={selectedType} style={{ width: '100%' }} onChange={setSelectedType} options={typeItems} /></Col>
+              <Col xs={24} sm={8} style={{ textAlign: 'left' }}><Text style={{ color: 'white' }}>หมายเลขสัญญาซื้อขาย</Text></Col>
+              <Col xs={24} sm={16}><Input placeholder="กรอกหมายเลขสัญญา" value={contractNumber} onChange={e => setContractNumber(e.target.value)} /></Col>
+              <Col xs={24} sm={8} style={{ textAlign: 'left' }}><Text style={{ color: 'white' }}>พนักงานที่ดูแล</Text></Col>
+              <Col xs={24} sm={16}><Select placeholder="เลือกพนักงาน" value={selectedEmp} style={{ width: '100%' }} onChange={setSelectedEmp} options={empItems} /></Col>
+            </Row>
+            
+            <Title level={4} style={{ color: 'white' }}>เลือกวันเวลานัดหมาย</Title>
+            <div style={{ background: '#4A4A4A', padding: '0', borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', marginBottom: '40px' }}>
+              <CustomDatePicker selectedDate={selectedDate} setSelectedDate={setSelectedDate as (date: Dayjs) => void} />
+              <div style={{ padding: '24px' }}>
+                <Row gutter={[16, 16]}>
+                  {timeOptions.map((time, index) => (
+                    <Col xs={12} sm={8} md={6} key={index}>
+                      <Button
+                        style={{
+                          width: '100%',
+                          height: '50px',
+                          background: selectedTime === time ? '#f1d430ff' : 'transparent',
+                          color: selectedTime === time ? 'black' : 'white',
+                          borderColor: selectedTime === time ? '#f1d430ff' : '#ddd',
+                          borderRadius: '6px'
+                        }}
+                        onClick={() => setSelectedTime(time)}
+                      >
+                        {time}
+                      </Button>
+                    </Col>
+                  ))}
+                </Row>
+              </div>
+            </div>
+
+            {selectedType === 'จัดส่งรถถึงที่' && (
+              <>
+                <Title level={4} style={{ color: 'white' }}>ที่อยู่สำหรับจัดส่ง</Title>
+                <Text style={{ color: '#cccccc', display: 'block', marginBottom: '10px' }}>สำหรับลูกค้าที่เลือกให้เต้นท์ขับรถยนต์นำไปส่งที่บ้านลูกค้า</Text>
+                <Input.TextArea placeholder="กรอกที่อยู่" rows={4} value={address} onChange={e => setAddress(e.target.value)} style={{ marginBottom: '20px' }} />
+                <Row gutter={[16, 16]}>
+                  <Col xs={24} sm={8}>
+                    <Text style={{ color: 'white' }}>จังหวัด</Text>
+                    <Select showSearch placeholder="เลือกจังหวัด" value={selectedProvince} style={{ width: '100%', marginTop: '8px' }} onChange={handleProvinceChange} options={provinces.map(p => ({ value: p.name_th, label: p.name_th }))} />
+                  </Col>
+                  <Col xs={24} sm={8}>
+                    <Text style={{ color: 'white' }}>อำเภอ/เขต</Text>
+                    <Select showSearch placeholder="เลือกอำเภอ/เขต" value={selectedDistrict} style={{ width: '100%', marginTop: '8px' }} onChange={handleDistrictChange} disabled={!selectedProvince} options={districtOptions} />
+                  </Col>
+                  <Col xs={24} sm={8}>
+                    <Text style={{ color: 'white' }}>ตำบล/แขวง</Text>
+                    <Select showSearch placeholder="เลือกตำบล/แขวง" value={selectedSubdistrict} style={{ width: '100%', marginTop: '8px' }} onChange={setSelectedSubdistrict} disabled={!selectedDistrict} options={subdistrictOptions} />
+                  </Col>
+                </Row>
+              </>
+            )}
+
+            <Row justify="center" style={{ marginTop: '60px' }}>
+              <Space size="middle">
+                <Button
+                  disabled={isSaveDisabled}
+                  style={{
+                    width: '120px',
+                    height: '40px',
+                    background: 'linear-gradient(45deg, #FFD700, #FFA500)',
+                    color: 'black',
+                    border: 'none',
+                    fontWeight: 'bold',
+                    cursor: isSaveDisabled ? 'not-allowed' : 'pointer',
+                  }}
+                  onClick={handleSave}
+                >
+                  บันทึก
+                </Button>
+                <Button
+                  type="default"
+                  style={{
+                    width: '120px',
+                    height: '40px',
+                    background: 'transparent',
+                    borderColor: '#888',
+                    color: '#888'
+                  }}
+                  onClick={() => navigate('/pickup-car')}
+                >
+                  ยกเลิก
+                </Button>
+              </Space>
+            </Row>
+          </Col>
         </Row>
-      </Header>
-
-      <Drawer title="เมนู" onClose={onClose} open={open} placement="right" style={{ background: '#262626' }}>
-        <Menu theme="dark" mode="vertical" style={{ background: '#262626' }} onClick={handleMenuClick} items={drawerMenuItems} />
-      </Drawer>
-
-      <Content style={{ padding: '0 48px' }}>
-        <div style={{ background: colorBgContainer, minHeight: 1080, padding: 24, borderRadius: borderRadiusLG }}>
-          <Row justify="center">
-            <Col xs={24} sm={22} md={20} lg={18} xl={16}>
-              <Title level={2} style={{ color: 'white' }}>Vehical Pickup/Delivery</Title>
-              <Divider style={{ borderColor: '#424242' }} />
-
-              <Row align="middle" gutter={[16, 20]} style={{ marginBottom: '40px' }}>
-                <Col xs={24} sm={8} style={{ textAlign: 'left' }}><Text style={{ color: 'white' }}>เลือกประเภทการรับรถยนต์</Text></Col>
-                <Col xs={24} sm={16}><Select placeholder="เลือกประเภท" value={selectedType} style={{ width: '100%' }} onChange={setSelectedType} options={typeItems} /></Col>
-                <Col xs={24} sm={8} style={{ textAlign: 'left' }}><Text style={{ color: 'white' }}>หมายเลขสัญญาซื้อขาย</Text></Col>
-                <Col xs={24} sm={16}><Input placeholder="กรอกหมายเลขสัญญา" value={contractNumber} onChange={e => setContractNumber(e.target.value)} /></Col>
-                <Col xs={24} sm={8} style={{ textAlign: 'left' }}><Text style={{ color: 'white' }}>พนักงานที่ดูแล</Text></Col>
-                <Col xs={24} sm={16}><Select placeholder="เลือกพนักงาน" value={selectedEmp} style={{ width: '100%' }} onChange={setSelectedEmp} options={empItems} /></Col>
-              </Row>
-              <Row style={{ marginTop: '40px' }}>
-                <Col span={24}>
-                  <Text style={{ color: 'white' }}>เลือกวันเวลานัดหมาย</Text>
-                  <div style={{ background: '#4A4A4A', padding: '0', borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
-                    <CustomDatePicker selectedDate={selectedDate} setSelectedDate={setSelectedDate as (date: Dayjs) => void} />
-                    <div style={{ padding: '24px' }}>
-                      <Row gutter={[16, 16]}>
-                        {timeOptions.map((time, index) => (
-                          <Col xs={12} sm={8} md={6} key={index}>
-                            <Button
-                              style={{
-                                width: '100%',
-                                height: '50px',
-                                background: selectedTime === time ? '#f1d430ff' : 'transparent',
-                                color: selectedTime === time ? 'black' : 'white',
-                                borderColor: selectedTime === time ? '#f1d430ff' : '#ddd',
-                                borderRadius: '6px'
-                              }}
-                              onClick={() => setSelectedTime(time)}
-                            >
-                              {time}
-                            </Button>
-                          </Col>
-                        ))}
-                      </Row>
-                    </div>
-                  </div>
-                </Col>
-              </Row>
-
-              {selectedType === 'จัดส่งรถถึงที่' && (
-                <>
-                  <Title level={4} style={{ color: 'white' }}>ที่อยู่สำหรับจัดส่ง</Title>
-                  <Text style={{ color: '#cccccc', display: 'block', marginBottom: '10px' }}>สำหรับลูกค้าที่เลือกให้เต้นท์ขับรถยนต์นำไปส่งที่บ้านลูกค้า</Text>
-                  <Input.TextArea placeholder="กรอกที่อยู่" rows={4} value={address} onChange={e => setAddress(e.target.value)} style={{ marginBottom: '20px' }} />
-                  <Row gutter={[16, 16]}>
-                    <Col xs={24} sm={8}>
-                      <Text style={{ color: 'white' }}>จังหวัด</Text>
-                      <Select showSearch placeholder="เลือกจังหวัด" value={selectedProvince} style={{ width: '100%', marginTop: '8px' }} onChange={handleProvinceChange} options={provinces.map(p => ({ value: p.name_th, label: p.name_th }))} />
-                    </Col>
-                    <Col xs={24} sm={8}>
-                      <Text style={{ color: 'white' }}>อำเภอ/เขต</Text>
-                      <Select showSearch placeholder="เลือกอำเภอ/เขต" value={selectedDistrict} style={{ width: '100%', marginTop: '8px' }} onChange={handleDistrictChange} disabled={!selectedProvince} options={districtOptions} />
-                    </Col>
-                    <Col xs={24} sm={8}>
-                      <Text style={{ color: 'white' }}>ตำบล/แขวง</Text>
-                      <Select showSearch placeholder="เลือกตำบล/แขวง" value={selectedSubdistrict} style={{ width: '100%', marginTop: '8px' }} onChange={setSelectedSubdistrict} disabled={!selectedDistrict} options={subdistrictOptions} />
-                    </Col>
-                  </Row>
-                </>
-              )}
-
-              <Row justify="center" style={{ marginTop: '60px' }}>
-                <Space size="middle">
-                  <Button
-                    disabled={isSaveDisabled}
-                    style={{
-                      width: '120px',
-                      height: '40px',
-                      background: 'linear-gradient(45deg, #FFD700, #FFA500)',
-                      color: 'black',
-
-                      border: 'none',
-                      fontWeight: 'bold',
-                      cursor: isSaveDisabled ? 'not-allowed' : 'pointer',
-                    }}
-                    onClick={handleSave}
-                  >
-                    บันทึก
-                  </Button>
-                  <Button
-                    type="default"
-                    style={{
-                      width: '120px',
-                      height: '40px',
-                      background: 'transparent',
-                      borderColor: '#888',
-                      color: '#888'
-                    }}
-                    onClick={() => navigate('/pickup-car')}
-                  >
-                    ยกเลิก
-                  </Button>
-                </Space>
-              </Row>
-            </Col>
-          </Row>
-        </div>
-      </Content>
-      <Footer style={{ textAlign: 'center', background: '#4A4A4A', color: 'white' }}>
-        Ant Design ©{new Date().getFullYear()} Created by sapatchanon khotrwiang
-      </Footer>
-    </Layout>
+      </div>
+    </div>
   );
 };
 

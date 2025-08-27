@@ -1,21 +1,30 @@
 import React, { useState } from 'react';
 import {
-  Layout, theme, Button, Row, Col, Drawer, Menu, Card, Tabs, Form, Input, Checkbox, message, Typography
+  Layout, Button, Row, Col, Drawer, Menu, Card, Tabs, Form, Input, Checkbox, message, Typography
 } from 'antd';
 import type { MenuInfo } from 'rc-menu/lib/interface';
-import { UserOutlined, LockOutlined, IdcardOutlined,MenuOutlined } from '@ant-design/icons';
+import { UserOutlined, LockOutlined, IdcardOutlined, MenuOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { drawerMenuItems } from '../../data/data';
+import { useAuth } from '../../contexts/AuthContext';
+// 1. นำเข้าข้อมูลผู้ใช้จำลอง
+import { mockCustomers, mockEmployees } from '../../data/users';
 
 const { Header, Content, Footer } = Layout;
-// 🟢 FIX 3: Add 'Text' to the import from Typography
 const { Title, Link, Text } = Typography;
 
+interface LoginFormValues {
+  email?: string;
+  password?: string;
+  remember?: boolean;
+  employeeId?: string;
+}
+
 const LoginPage: React.FC = () => {
-  // 🟢 FIX 1: Remove unused 'colorBgContainer'
-  const { token: { borderRadiusLG } } = theme.useToken();
+ 
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const showDrawer = () => setOpen(true);
   const onClose = () => setOpen(false);
@@ -28,12 +37,32 @@ const LoginPage: React.FC = () => {
     }
   };
   
-  // 🟢 FIX 2: Replace 'any' with a more specific type
-  const onFinish = (values: Record<string, any>) => {
-    console.log('Received values of form: ', values);
-    message.success('เข้าสู่ระบบสำเร็จ!');
-    // Navigate to a default page after login, e.g., '/pickup-car'
-    navigate('/pickup-car');
+  // 2. แก้ไขฟังก์ชัน onFinishCustomer
+  const onFinishCustomer = (values: LoginFormValues) => {
+    const foundUser = mockCustomers.find(
+      (user) => user.email === values.email && user.password === values.password
+    );
+
+    if (foundUser) {
+      message.success('เข้าสู่ระบบสำเร็จ!');
+      login('real-customer-token', 'customer'); // ใช้ token จริงและ role ที่ถูกต้อง
+    } else {
+      message.error('อีเมลหรือรหัสผ่านไม่ถูกต้อง!');
+    }
+  };
+
+  // 3. แก้ไขฟังก์ชัน onFinishEmployee
+  const onFinishEmployee = (values: LoginFormValues) => {
+    const foundUser = mockEmployees.find(
+      (user) => user.employeeId === values.employeeId && user.password === values.password
+    );
+
+    if (foundUser) {
+      message.success('เข้าสู่ระบบสำเร็จ!');
+      login('real-employee-token', 'employee');
+    } else {
+      message.error('รหัสพนักงานหรือรหัสผ่านไม่ถูกต้อง!');
+    }
   };
 
   const tabItems = [
@@ -44,19 +73,19 @@ const LoginPage: React.FC = () => {
         <Form
           name="customer_login"
           initialValues={{ remember: true }}
-          onFinish={onFinish}
+          onFinish={onFinishCustomer}
         >
           <Form.Item
             name="email"
             rules={[{ required: true, message: 'กรุณากรอกอีเมลของคุณ!' }]}
           >
-            <Input prefix={<UserOutlined />} placeholder="อีเมล" />
+            <Input style={{background : '#424242',border:'grey'}} prefix={<UserOutlined />} placeholder="อีเมล" />
           </Form.Item>
           <Form.Item
             name="password"
             rules={[{ required: true, message: 'กรุณากรอกรหัสผ่าน!' }]}
           >
-            <Input.Password prefix={<LockOutlined />} placeholder="รหัสผ่าน" />
+            <Input.Password style={{background : '#424242',border:'grey'}} prefix={<LockOutlined /> } placeholder="รหัสผ่าน" />
           </Form.Item>
           <Form.Item>
             <Row justify="space-between">
@@ -82,19 +111,19 @@ const LoginPage: React.FC = () => {
         <Form
           name="employee_login"
           initialValues={{ remember: true }}
-          onFinish={onFinish}
+          onFinish={onFinishEmployee}
         >
           <Form.Item
             name="employeeId"
             rules={[{ required: true, message: 'กรุณากรอกรหัสพนักงาน!' }]}
           >
-            <Input prefix={<IdcardOutlined />} placeholder="รหัสพนักงาน (พนักงานขาย/ผู้จัดการ)" />
+            <Input style={{background : '#424242',border:'grey'}} prefix={<IdcardOutlined />} placeholder="รหัสพนักงาน (พนักงานขาย/ผู้จัดการ)" />
           </Form.Item>
           <Form.Item
             name="password"
             rules={[{ required: true, message: 'กรุณากรอกรหัสผ่าน!' }]}
           >
-            <Input.Password prefix={<LockOutlined />} placeholder="รหัสผ่าน" />
+            <Input.Password style={{background : '#424242',border:'grey'}} prefix={<LockOutlined />} placeholder="รหัสผ่าน" />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" block style={{ background: 'linear-gradient(45deg, #FFD700, #FFA500)', color: 'black', fontWeight: 'bold' }}>
@@ -126,7 +155,7 @@ const LoginPage: React.FC = () => {
               style={{
                 background: '#363636',
                 border: '1px solid #424242',
-                borderRadius: borderRadiusLG,
+              
               }}
             >
               <div style={{ textAlign: 'center', marginBottom: '24px' }}>
