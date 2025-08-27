@@ -1,9 +1,11 @@
 /* eslint-disable react-refresh/only-export-components */
 
 import React,
-{ createContext,
+{
+  createContext,
   useState,
-  useContext } from 'react';
+  useContext
+} from 'react';
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -35,13 +37,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   });
   const navigate = useNavigate();
 
+
+
   const login = (token: string, role: UserRole) => {
     localStorage.setItem('token', token);
     localStorage.setItem('userRole', role);
     setIsAuthenticated(true);
-    setUserRole(role);
-    navigate('buy-car');
-  };
+    if (role == 'customer') {
+      setUserRole(role);
+      navigate('buy-car');
+    }
+    else if (role == 'employee') {
+        setUserRole(role);
+        navigate('admin');
+      }
+    }
+
+
+
 
   const logout = () => {
     localStorage.removeItem('token');

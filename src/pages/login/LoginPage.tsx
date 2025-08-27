@@ -168,7 +168,7 @@ const LoginPage: React.FC = () => {
       </Content>
 
       <Footer style={{ textAlign: 'center', background: '#4A4A4A', color: 'white' }}>
-        Ant Design ©{new Date().getFullYear()} Created by sapatchanon khotrwiang
+        Ant Design ©{new Date().getFullYear()}  Created by G14 Used Car tent
       </Footer>
     </Layout>
   );

@@ -17,6 +17,7 @@ import PickupCarCreatePage from './pages/pickup-delivery/PickupCarPageCreate.tsx
 import InspectionCreatePage from './pages/inspection/InspectionCreatePage.tsx';
 import PaymentPage from './pages/payment/PaymentPage.tsx';
 import ProfilePage from './pages/profile/ProfilePage.tsx';
+import AdminPage from './pages/admin/admin.tsx';
 
 // ProtectedRoute component ไม่ต้องแก้ไข
 const ProtectedRoute: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -48,6 +49,7 @@ const App: React.FC = () => {
         <Route path="pickup-car-create" element={<ProtectedRoute><PickupCarCreatePage /></ProtectedRoute>} />
         <Route path="inspection-car" element={<ProtectedRoute><InspectionPage /></ProtectedRoute>} />
         <Route path="payment" element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
+        <Route path="admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
 
         {/* Fallback Route */}
         <Route path="*" element={<Navigate to="/" />} />
